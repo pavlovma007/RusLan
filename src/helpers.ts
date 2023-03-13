@@ -16,6 +16,6 @@ export function generateUUID() { // Public Domain/MIT
     });
 }
 
-export function time(): number { return Date.parse(new Date())}
+export function time(): number { return Date.parse(''+new Date())}
 //p(time())
 

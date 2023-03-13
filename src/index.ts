@@ -1,4 +1,6 @@
 import Dict = NodeJS.Dict;
+const {paxos} = require('paxos/Paxos')
+const {nodemgr} = require('paxos/NodeMgr')
 const p=console.log
 p('=================================')
 /*
@@ -125,23 +127,27 @@ class Partition { // TODO SAVE it and READ it
 const quorumReplicPercent = 0.7 // 70%
 
 
-class ActorNode {
-    store:  Dict<Partition> = {} // key - partitionId ; value - Account
-    constructor(partitionsIds: Array<string>){
-        setInterval(()=>{
-            // TODO sync patiotion if
-        }, 1000)
-    }
-    leaderElecttion(partituinId: string)
-    // TODO
-    // pending log
-    // commit
-    lastAccountOperation = ((part: string, u: UserPubKey) : IOperation | undefined =>
-        this.store[part]?.lastAccountOperation(u))
-}
-const actors = []
-const ACTORCOUNT = 100
-for (let i=0; i<ACTORCOUNT ; ++i){
-    const a = new ActorNode()
-    actors.push(a)
-}
+// class ActorNode {
+//     store:  Dict<Partition> = {} // key - partitionId ; value - Account
+//     constructor(partitionsIds: Array<string>){
+//         setInterval(()=>{
+//             // TODO sync patiotion if
+//         }, 1000)
+//     }
+//     leaderElecttion(partituinId: string)
+//     // TODO
+//     // pending log
+//     // commit
+//     lastAccountOperation = ((part: string, u: UserPubKey) : IOperation | undefined =>
+//         this.store[part]?.lastAccountOperation(u))
+// }
+// const actors = []
+// const ACTORCOUNT = 100
+// for (let i=0; i<ACTORCOUNT ; ++i){
+//     const a = new ActorNode()
+//     actors.push(a)
+// }
+
+paxos.go(10, 7)
+p(paxos)
+p(nodemgr)

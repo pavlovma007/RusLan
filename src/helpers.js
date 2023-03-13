@@ -20,6 +20,6 @@ function generateUUID() {
     });
 }
 exports.generateUUID = generateUUID;
-function time() { return Date.parse(new Date()); }
+function time() { return Date.parse('' + new Date()); }
 exports.time = time;
 //p(time())

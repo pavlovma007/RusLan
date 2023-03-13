@@ -46,7 +46,7 @@ function send(from: UserPubKey, to: UserPubKey, count: number){
     const m = new MoneyDoc()
     m.from = from; m.to = to; m.howMuch = count;
     m.sign = from
-    m.prevId = ////// тут юзер не может сам написать что то ему надо сослаться на соощество
+    m.prevId = '' ////// тут юзер не может сам написать что то ему надо сослаться на соощество
     insert(m)
 }
 send(userAlice, userBob, 10)

@@ -1,4 +1,6 @@
 "use strict";
+const { paxos } = require('paxos/Paxos.js');
+const { nodemgr } = require('paxos/NodeMgr.js');
 const p = console.log;
 p('=================================');
 const userBOSS = 'e3b0c4'; //'BOSS-USER'
@@ -85,21 +87,26 @@ class Partition {
  * todo
  * */
 const quorumReplicPercent = 0.7; // 70%
-class ActorNode {
-    constructor(partitionsIds) {
-        this.store = {}; // key - partitionId ; value - Account
-        // TODO
-        // pending log
-        // commit
-        this.lastAccountOperation = ((part, u) => { var _a; return (_a = this.store[part]) === null || _a === void 0 ? void 0 : _a.lastAccountOperation(u); });
-        setInterval(() => {
-            // TODO sync patiotion if
-        }, 1000);
-    }
-}
-const actors = [];
-const ACTORCOUNT = 100;
-for (let i = 0; i < ACTORCOUNT; ++i) {
-    const a = new ActorNode();
-    actors.push(a);
-}
+// class ActorNode {
+//     store:  Dict<Partition> = {} // key - partitionId ; value - Account
+//     constructor(partitionsIds: Array<string>){
+//         setInterval(()=>{
+//             // TODO sync patiotion if
+//         }, 1000)
+//     }
+//     leaderElecttion(partituinId: string)
+//     // TODO
+//     // pending log
+//     // commit
+//     lastAccountOperation = ((part: string, u: UserPubKey) : IOperation | undefined =>
+//         this.store[part]?.lastAccountOperation(u))
+// }
+// const actors = []
+// const ACTORCOUNT = 100
+// for (let i=0; i<ACTORCOUNT ; ++i){
+//     const a = new ActorNode()
+//     actors.push(a)
+// }
+paxos.go(10, 7);
+p(paxos);
+p(nodemgr);

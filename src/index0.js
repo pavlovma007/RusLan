@@ -43,8 +43,8 @@ function send(from, to, count) {
     m.to = to;
     m.howMuch = count;
     m.sign = from;
-    m.prevId = ////// тут юзер не может сам написать что то ему надо сослаться на соощество
-        insert(m);
+    m.prevId = ''; ////// тут юзер не может сам написать что то ему надо сослаться на соощество
+    insert(m);
 }
 send(userAlice, userBob, 10);
 // computed
