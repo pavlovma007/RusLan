@@ -1,84 +1,105 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.generateUUID = void 0;
 const p = console.log;
-p('===========================================');
-// helpers
-///////////////////////////////////////////////////////////////////
-function generateUUID() {
-    let d = new Date().getTime(); //Timestamp
-    let d2 = ((typeof performance !== 'undefined') && performance.now && (performance.now() * 1000)) || 0; //Time in microseconds since page-load or 0 if unsupported
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-        let r = Math.random() * 16; //random number between 0 and 16
-        if (d > 0) { //Use timestamp until depleted
-            r = (d + r) % 16 | 0;
-            d = Math.floor(d / 16);
-        }
-        else { //Use microseconds since page-load if supported
-            r = (d2 + r) % 16 | 0;
-            d2 = Math.floor(d2 / 16);
-        }
-        return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
-    });
-}
-exports.generateUUID = generateUUID;
-function time() { return Date.parse(new Date()); }
-const userBOSS = 'BOSS-USER';
-const userBob = 'BOB-USER';
-const userAlice = 'ALICE-USER';
+p('=================================');
+const userBOSS = 'e3b0c4'; //'BOSS-USER'
+const userBob = '4298fc1'; //'BOB-USER'
+const userAlice = 'c149afbf4c89'; // ''ALICE-USER'
 const _users = [userAlice, userBob];
-// MONEY
-class MoneyDoc {
-    constructor() {
-        this.id = generateUUID();
-        this.from = '';
-        this.to = '';
-        this.howMuch = 0; // hours
-        this.moment = time();
-        this.sign = null; // verified signs
-        this.prevId = null;
+const hashToNumer = (h) => parseInt(h.substr(0, 8), 16);
+//p(hashToNumer(userBob), hashToNumer('e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'))
+//p(parseInt('e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'.substr(0, 8), 16))
+// operations ///////////////////////////////////
+const startOperationIndex = 0;
+class SeedOperation {
+    constructor(amount) {
+        this.index = -1;
+        this.type = 'seed';
+        this.amount = 0;
+        this.amount = amount;
     }
 }
-// global storage
-const docs = [];
-const insert = (d) => {
-    docs.push(d);
-};
-// init
-const seed = (u, amount) => {
-    const m = new MoneyDoc();
-    m.from = userBOSS;
-    m.to = u;
-    m.howMuch = amount;
-    m.sign = userBOSS;
-    m.prevId = null;
-    insert(m);
-};
-seed(userBob, 100);
-seed(userAlice, 100);
-// TODO not `send` but BUY
-function send(from, to, count) {
-    const m = new MoneyDoc();
-    m.from = from;
-    m.to = to;
-    m.howMuch = count;
-    m.sign = from;
-    m.prevId = ////// тут юзер не может сам написать что то ему надо сослаться на соощество
-        insert(m);
+class SendOperation {
+    constructor(to, amount) {
+        this.index = -1;
+        this.type = 'send';
+        this.amount = 0;
+        this.to = '';
+        this.amount = amount;
+        this.to = to;
+    }
 }
-send(userAlice, userBob, 10);
-// computed
-const dumpState = () => {
-    const byUserDict = {};
-    let usersInDocs = [];
-    docs.forEach((d, i, a) => {
-        if (usersInDocs.indexOf(d.to) == -1)
-            usersInDocs.push(d.to);
-    });
-    //p(usersInDocs)
-    usersInDocs.map((u) => byUserDict[u] = 0);
-    //p(byUserDict)
-    p(docs);
-};
-dumpState();
-//setTimeout(()=>p('timeout') && process.exit(0), 3000)
+class Account {
+    constructor() {
+        this.owner = '';
+        this.amount = 0;
+        this.pendingLog = [];
+        this.comitedLog = [];
+    }
+}
+//p(JSON.stringify(new Account()), JSON.stringify(new SendOperation(userAlice, 100)))
+// сеть
+// partitions ///////////////////////////////////
+const partitionCount = 10; // TODO 1000
+const partitionsIds = [];
+for (let j = 0; j < partitionCount; j++) { // gen
+    partitionsIds.push('partitionId-' + j);
+}
+//p(partitionsIds)
+const partitionId = (u) => 'partitionId-' + hashToNumer(u) % partitionCount;
+// p(partitionId(userBob), partitionId(userAlice))
+class Partition {
+    constructor() {
+        // это и есть store данных.
+        /// тут должны быть операции
+        this.accounts = {};
+        this.lastAccountOperation = (u) => { var _a; return (_a = this.accounts[u]) === null || _a === void 0 ? void 0 : _a.comitedLog[-1]; };
+    }
+}
+// p((new Partition()).lastAccountOperation(userAlice))
+/**
+ * TODO
+ * 1. sync 2 patritions
+ * 2. seed to account from boss (quorum)
+ * 3. send to account
+ */
+//   ACTORS  PAXOS  ////////////////////////////////////////
+/**
+ * операция seed для абонента
+ * --------------------------
+ * 1. клиент ищет узлы\акторы с партициями для счёта абонента
+ *           ?? TODO какие-то команды
+ * список узлов отправляется им с вопросом : кто лидер, они голосуют за старшего или они уже знают лидера по иной причине
+ * получили лидера
+ * ?? лидер синхронизирует аккаунты
+ * лидеру отправляем операцию в лог (сообщая опять все узлы, которые в ней учавствуют)
+ * лидер записывает ее в pending log
+ * лидер рассылает операцию узлам
+ * узлы подтверждают, что операция принята
+ * лидер, если число подтверждений превышает процент, перемещает операцию в comitedLog
+ *      и шлет "всем" узлам приказ тоже это сделать
+ *
+ * Операция транзакционная
+ * клиент ищет узлы с партициями для СВОЕГО номера счёта
+ * клиент ищет узлы с партициями для ДРУГОГО номера счёта (все участники которые требуются для транзакции)
+ * узлы сортируются , выбирается самый младший - он становится лидером для этой операции
+ * todo
+ * */
+const quorumReplicPercent = 0.7; // 70%
+class ActorNode {
+    constructor(partitionsIds) {
+        this.store = {}; // key - partitionId ; value - Account
+        // TODO
+        // pending log
+        // commit
+        this.lastAccountOperation = ((part, u) => { var _a; return (_a = this.store[part]) === null || _a === void 0 ? void 0 : _a.lastAccountOperation(u); });
+        setInterval(() => {
+            // TODO sync patiotion if
+        }, 1000);
+    }
+}
+const actors = [];
+const ACTORCOUNT = 100;
+for (let i = 0; i < ACTORCOUNT; ++i) {
+    const a = new ActorNode();
+    actors.push(a);
+}
