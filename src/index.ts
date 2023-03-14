@@ -1,4 +1,6 @@
 import Dict = NodeJS.Dict;
+import {Request, Response, Service} from "./caspaxos/Network";
+import {AcceptorMock} from "./caspaxos/Acceptor";
 
 const p=console.log
 p('===========================================')
@@ -20,7 +22,7 @@ export function generateUUID() { // Public Domain/MIT
     });
 }
 
-function time(): number { return Date.parse(new Date())}
+function time(): number { return Date.parse(''+new Date())}
 //p(time())
 
 
@@ -61,33 +63,86 @@ const seed = (u: UserPubKey, amount: number) => {
 seed(userBob, 100)
 seed(userAlice, 100)
 
-// TODO not `send` but BUY
-function send(from: UserPubKey, to: UserPubKey, count: number){
-    const m = new MoneyDoc()
-    m.from = from; m.to = to; m.howMuch = count;
-    m.sign = from
-    m.prevId = ////// тут юзер не может сам написать что то ему надо сослаться на соощество
-    insert(m)
-}
-send(userAlice, userBob, 10)
 
-// computed
-const dumpState = ()=>{
+const {Proposer, ProposerError} = require('./gryadka-core/src/Proposer.js')
+const {BallotNumber} = require('./gryadka-core/src/BallotNumber.js')
+// learn BallotNumber
+const bn = new BallotNumber(1,100)
+//p(bn, bn.isZero(), bn.inc(), bn.next(), bn)
+// out:
+// BallotNumber { counter: 2, id: 100 } false BallotNumber { counter: 2, id: 100 } BallotNumber { counter: 3, id: 100 } BallotNumber { counter: 2, id: 100 }
+// lear Proposer
 
-    const byUserDict: Dict<number> = {}
-    let usersInDocs:Array<UserPubKey> = []
-    docs.forEach((d,i,a)=>{
-        if(usersInDocs.indexOf(d.to)==-1)
-            usersInDocs.push(d.to)
-    })
-    //p(usersInDocs)
 
-    usersInDocs.map((u)=>byUserDict[u]=0)
-    //p(byUserDict)
 
-    p(docs)
+
+
+
+
+
+
+function createAcceptors(ids: Array<string>): AcceptorMock[] {
+    return ids.map(aid => new AcceptorMock( aid));
 }
 
-dumpState()
-//setTimeout(()=>p('timeout') && process.exit(0), 3000)
+function createProposer({pid, network: Service, prepare, accept}:
+                            {
+                                pid: string,
+                                pidtime?: number  // TODO need ?
+                                network: Object,
+                                prepare: { nodes: AcceptorMock[], quorum: number },
+                                accept:  { nodes: AcceptorMock[], quorum: number }
+                            }): typeof Proposer
+{
+    const ballot = new BallotNumber(0, pid);
+
+    let prepare2 = {
+        nodes: prepare.nodes.map(
+            (x: AcceptorMock) => x.createClient(pid, network)),
+        quorum: prepare.quorum
+    };
+    let accept2 = {
+        nodes: accept.nodes.map((x: AcceptorMock) => x.createClient(pid, network)),
+        quorum: accept.quorum
+    };
+
+    const proposer = new Proposer(ballot, prepare2, accept2);
+
+    return proposer;
+}
+
+const ctx = {
+    timer : null , // new Timer(max_time_delay),
+    random : null , // new Random(seedrandom(seed)),
+    id : 0
+}
+
+class ServiceImplementation implements Service {
+    // handler(req: Request): Promise<{response: Response}> {
+    //     // if (this.ctx.random.random() <= this.stability) {
+    //     //     return this.service.handler(request);
+    //     // } else {
+    //     //     return Promise.reject(new Error());
+    //     // }
+    // }
+
+    ctx: any;
+    handle(req: Request): Promise<{ response: Response }> {
+        // return Promise.resolve({response: undefined});
+        return Promise.reject(new Error());
+    }
+}
+const networkObj = new ServiceImplementation();
+// return different network Service to different acceptors when network are splited
+const network = (acceptor: AcceptorMock)=>networkObj as Service
+
+const acceptors: AcceptorMock[] = createAcceptors( ["a0", "a1", "a2"]);
+
+const p1 = createProposer({
+    network: network,
+    pid: "p1",
+    pidtime: 1,
+    prepare: {nodes: acceptors, quorum: 2},
+    accept: {nodes: acceptors, quorum: 2}
+});
 

@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.generateUUID = void 0;
+const Acceptor_1 = require("./caspaxos/Acceptor");
 const p = console.log;
 p('===========================================');
 // helpers
@@ -22,7 +23,7 @@ function generateUUID() {
     });
 }
 exports.generateUUID = generateUUID;
-function time() { return Date.parse(new Date()); }
+function time() { return Date.parse('' + new Date()); }
 const userBOSS = 'BOSS-USER';
 const userBob = 'BOB-USER';
 const userAlice = 'ALICE-USER';
@@ -56,29 +57,49 @@ const seed = (u, amount) => {
 };
 seed(userBob, 100);
 seed(userAlice, 100);
-// TODO not `send` but BUY
-function send(from, to, count) {
-    const m = new MoneyDoc();
-    m.from = from;
-    m.to = to;
-    m.howMuch = count;
-    m.sign = from;
-    m.prevId = ////// тут юзер не может сам написать что то ему надо сослаться на соощество
-        insert(m);
+const { Proposer, ProposerError } = require('./gryadka-core/src/Proposer.js');
+const { BallotNumber } = require('./gryadka-core/src/BallotNumber.js');
+// learn BallotNumber
+const bn = new BallotNumber(1, 100);
+//p(bn, bn.isZero(), bn.inc(), bn.next(), bn)
+// out:
+// BallotNumber { counter: 2, id: 100 } false BallotNumber { counter: 2, id: 100 } BallotNumber { counter: 3, id: 100 } BallotNumber { counter: 2, id: 100 }
+// lear Proposer
+function createAcceptors(ids) {
+    return ids.map(aid => new Acceptor_1.AcceptorMock(aid));
 }
-send(userAlice, userBob, 10);
-// computed
-const dumpState = () => {
-    const byUserDict = {};
-    let usersInDocs = [];
-    docs.forEach((d, i, a) => {
-        if (usersInDocs.indexOf(d.to) == -1)
-            usersInDocs.push(d.to);
-    });
-    //p(usersInDocs)
-    usersInDocs.map((u) => byUserDict[u] = 0);
-    //p(byUserDict)
-    p(docs);
+function createProposer({ pid, network: Service, prepare, accept }) {
+    const ballot = new BallotNumber(0, pid);
+    let prepare2 = {
+        nodes: prepare.nodes.map((x) => x.createClient(pid, network)),
+        quorum: prepare.quorum
+    };
+    let accept2 = {
+        nodes: accept.nodes.map((x) => x.createClient(pid, network)),
+        quorum: accept.quorum
+    };
+    const proposer = new Proposer(ballot, prepare2, accept2);
+    return proposer;
+}
+const ctx = {
+    timer: null,
+    random: null,
+    id: 0
 };
-dumpState();
-//setTimeout(()=>p('timeout') && process.exit(0), 3000)
+class ServiceImplementation {
+    handle(req) {
+        // return Promise.resolve({response: undefined});
+        return Promise.reject(new Error());
+    }
+}
+const networkObj = new ServiceImplementation();
+// return different network Service to different acceptors when network are splited
+const network = (acceptor) => networkObj;
+const acceptors = createAcceptors(["a0", "a1", "a2"]);
+const p1 = createProposer({
+    network: network,
+    pid: "p1",
+    pidtime: 1,
+    prepare: { nodes: acceptors, quorum: 2 },
+    accept: { nodes: acceptors, quorum: 2 }
+});

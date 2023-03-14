@@ -1,0 +1,3 @@
+[submodule "src/gryadka-js"]
+	path = src/_gryadka-js
+	url = https://github.com/gryadka/js.git
