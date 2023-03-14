@@ -1,30 +1,10 @@
 import Dict = NodeJS.Dict;
-import {Request, Response, Service} from "./caspaxos/Network";
+import {Service, ServiceImplementation} from "./caspaxos/Network";
 import {AcceptorMock} from "./caspaxos/Acceptor";
+import {generateUUID, time} from "./common/helper";
 
 const p=console.log
 p('===========================================')
-// helpers
-///////////////////////////////////////////////////////////////////
-export function generateUUID() { // Public Domain/MIT
-    let d = new Date().getTime();//Timestamp
-    let  d2 = ((typeof performance !== 'undefined') && performance.now && (performance.now()*1000)) || 0;//Time in microseconds since page-load or 0 if unsupported
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        let r = Math.random() * 16;//random number between 0 and 16
-        if(d > 0){//Use timestamp until depleted
-            r = (d + r)%16 | 0;
-            d = Math.floor(d/16);
-        } else {//Use microseconds since page-load if supported
-            r = (d2 + r)%16 | 0;
-            d2 = Math.floor(d2/16);
-        }
-        return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
-    });
-}
-
-function time(): number { return Date.parse(''+new Date())}
-//p(time())
-
 
 // users
 type UserPubKey = string
@@ -88,8 +68,8 @@ function createAcceptors(ids: Array<string>): AcceptorMock[] {
 function createProposer({pid, network: Service, prepare, accept}:
                             {
                                 pid: string,
-                                pidtime?: number  // TODO need ?
-                                network: Object,
+                                // pidtime?: number  // TODO need ?
+                                network: Service,
                                 prepare: { nodes: AcceptorMock[], quorum: number },
                                 accept:  { nodes: AcceptorMock[], quorum: number }
                             }): typeof Proposer
@@ -117,32 +97,23 @@ const ctx = {
     id : 0
 }
 
-class ServiceImplementation implements Service {
-    // handler(req: Request): Promise<{response: Response}> {
-    //     // if (this.ctx.random.random() <= this.stability) {
-    //     //     return this.service.handler(request);
-    //     // } else {
-    //     //     return Promise.reject(new Error());
-    //     // }
-    // }
-
-    ctx: any;
-    handle(req: Request): Promise<{ response: Response }> {
-        // return Promise.resolve({response: undefined});
-        return Promise.reject(new Error());
-    }
-}
 const networkObj = new ServiceImplementation();
 // return different network Service to different acceptors when network are splited
 const network = (acceptor: AcceptorMock)=>networkObj as Service
+//p('network=',network())
 
 const acceptors: AcceptorMock[] = createAcceptors( ["a0", "a1", "a2"]);
+//p('acceptors=', acceptors)
 
 const p1 = createProposer({
-    network: network,
-    pid: "p1",
-    pidtime: 1,
+    network: networkObj,
+    pid: "pid-p1",
+    // pidtime: 1,
     prepare: {nodes: acceptors, quorum: 2},
     accept: {nodes: acceptors, quorum: 2}
 });
-
+// p(p1)
+p1.change('value1-key', ()=>'value1-value', {extra: true}).then(
+    (a: any)=>p('success a=', a),
+    (b: any)=>p('error b=', b)
+)

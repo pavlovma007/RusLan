@@ -1,3 +1,5 @@
+const p = console.error
+
 class ProposerError extends Error {
     static ConcurrentRequestError() {
         return new ProposerError("ConcurrentRequestError");
@@ -49,6 +51,7 @@ class Proposer {
         }
         try {
             const [ballot, curr] = await this.guessValue(key, extra);
+            p('[ballot, curr]', [ballot, curr])
 
             let next = curr;
             let error = null;
@@ -78,12 +81,15 @@ class Proposer {
             const tick = this.ballot.inc();
             let ok = null;
             try {
+                p('modes[0]=', this.prepare.nodes[0])
                 [ok] = await waitFor(
                     this.prepare.nodes.map(x => x.prepare(key, tick, extra)),
                     x => x.isPrepared,
                     this.prepare.quorum
                 );
+                p('guessValue ok=', ok)
             } catch (e) {
+                p('guessValue catch (e)=', e)
                 if (e instanceof InsufficientQuorumError) {
                     for (const x of e.all.filter(x => x.isConflict)) {
                         this.ballot.fastforwardAfter(x.ballot);

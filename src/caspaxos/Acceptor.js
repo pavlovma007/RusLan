@@ -10,7 +10,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AcceptorClientMock = exports.AcceptorMock = void 0;
+const helper_1 = require("../common/helper");
 const { BallotNumber } = require('../gryadka-core/src/BallotNumber.js');
+const p = console.error;
 class AcceptorMock {
     constructor(id) {
         this.aid = id;
@@ -85,8 +87,9 @@ class AcceptorMock {
     // static
     static sendPrepare(aid, pid, service, key, ballot, extra) {
         return __awaiter(this, void 0, void 0, function* () {
+            // p('static async sendPrepare=')
             const outgoing = {
-                id: service.ctx.uuid(),
+                id: (0, helper_1.generateUUID)(),
                 aid: aid,
                 pid: pid,
                 cmd: "prepare",
@@ -94,21 +97,22 @@ class AcceptorMock {
                 ballot: ballot,
                 extra: extra
             };
+            //p('static async sendPrepare', 'outgoing=', outgoing, ' service=', service)
             return (yield service.handler(outgoing)).response;
         });
     }
     // static
-    static sendAccept(aid, pid, service, key, ballot, state, promise, extra) {
+    static sendAccept(aid, pid, service, key, ballot, stateValue, promiseValue, extra) {
         return __awaiter(this, void 0, void 0, function* () {
             const outgoing = {
-                id: service.ctx.uuid(),
+                id: (0, helper_1.generateUUID)(),
                 aid: aid,
                 pid: pid,
                 cmd: "accept",
                 key: key,
                 ballot: ballot,
-                state: state,
-                promise: promise,
+                state: stateValue,
+                promise: promiseValue,
                 extra: extra
             };
             return (yield service.handler(outgoing)).response;
@@ -125,12 +129,13 @@ class AcceptorClientMock {
     }
     prepare(key, ballot, extra) {
         return __awaiter(this, void 0, void 0, function* () {
+            //p('AcceptorClientMock args=', key, ballot, extra)
             return yield AcceptorMock.sendPrepare(this.aid, this.pid, this.service, key, ballot, extra);
         });
     }
-    accept(key, ballot, state, promise, extra) {
+    accept(aid, pid, service, key, ballot, stateValue, promise, extra) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield AcceptorMock.sendAccept(this.aid, this.pid, this.service, key, ballot, state, promise, extra);
+            return yield AcceptorMock.sendAccept(this.aid, this.pid, this.service, key, ballot, stateValue, promise, extra);
         });
     }
 }
