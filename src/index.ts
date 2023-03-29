@@ -1,4 +1,4 @@
-import Dict = NodeJS.Dict;
+// import Dict = NodeJS.Dict;
 import {Service, ServiceImplementation} from "./caspaxos/Network";
 import {AcceptorMock} from "./caspaxos/Acceptor";
 import {generateUUID, time} from "./common/helper";

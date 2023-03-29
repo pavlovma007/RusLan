@@ -22,15 +22,24 @@ class ServiceImplementation {
         //     // }
         // }
         this.ctx = null;
+        this.requests = [];
     }
     handle(req) {
         return __awaiter(this, void 0, void 0, function* () {
             console.log('ServiceImplementation req=', req);
-            const resp = this.syncHandlerMock(req);
-            if (!!resp)
-                return Promise.resolve({ response: resp });
-            else
-                return Promise.reject(new Error());
+            const promise = new Promise((resolve, reject) => {
+                p('in new Promise((resolve, reject)', resolve, reject);
+                this.requests.push({ req: req, res: resolve, rej: reject }); // PUSH DOCUMENT TO INFOSPACE
+                setInterval(() => {
+                    p('this.requests=', this.requests);
+                }, 3000);
+            });
+            return promise;
+            // const resp = this.syncHandlerMock(req)
+            // if(!!resp)
+            //     return Promise.resolve({response: resp});
+            // else
+            //     return Promise.reject(new Error());
         });
     }
     syncHandlerMock(req) {

@@ -101,7 +101,7 @@ class Proposer {
             }
             const value = max(ok, x => x.ballot).value;
             this.cache.set(key, [tick, value]);
-        } 
+        }
         return this.cache.get(key);
     }
 
@@ -130,6 +130,7 @@ class Proposer {
         }
     }
 
+    "try lock on this proposer object only, not in all acceptors"
     tryLock(key) { 
         if (this.locks.has(key)) {
             return false;
@@ -160,11 +161,14 @@ function waitFor(promises, cond, count) {
                 let value = null;
                 let error = false;
                 try {
+                    // p('Proposer.js', 11)
                     value = await promise;
+                    // p('Proposer.js', 12)
                     if (isResolved) return;
                     all.push(value);
                     if (!cond(value)) error = true;
                 } catch(e) {
+                    // p('Proposer.js', 13)
                     if (isResolved) return;
                     error = true;
                 }

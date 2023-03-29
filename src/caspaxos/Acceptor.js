@@ -9,10 +9,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AcceptorClientMock = exports.AcceptorMock = void 0;
+exports.AcceptorMock = void 0;
 const helper_1 = require("../common/helper");
+const AcceptorClientMock_1 = require("./AcceptorClientMock");
 const { BallotNumber } = require('../gryadka-core/src/BallotNumber.js');
 const p = console.error;
+// implementation
 class AcceptorMock {
     constructor(id) {
         this.aid = id;
@@ -20,7 +22,7 @@ class AcceptorMock {
     }
     // создать клиента "наверх"
     createClient(pid, serviceWrapper) {
-        return new AcceptorClientMock(this.aid, pid, serviceWrapper(this));
+        return new AcceptorClientMock_1.AcceptorClientMock(this.aid, pid, serviceWrapper(this));
     }
     handler(request) {
         let response = null;
@@ -120,23 +122,3 @@ class AcceptorMock {
     }
 }
 exports.AcceptorMock = AcceptorMock;
-// implementation
-class AcceptorClientMock {
-    constructor(aid, pid, service) {
-        this.aid = aid;
-        this.pid = pid;
-        this.service = service;
-    }
-    prepare(key, ballot, extra) {
-        return __awaiter(this, void 0, void 0, function* () {
-            //p('AcceptorClientMock args=', key, ballot, extra)
-            return yield AcceptorMock.sendPrepare(this.aid, this.pid, this.service, key, ballot, extra);
-        });
-    }
-    accept(aid, pid, service, key, ballot, stateValue, promise, extra) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return yield AcceptorMock.sendAccept(this.aid, this.pid, this.service, key, ballot, stateValue, promise, extra);
-        });
-    }
-}
-exports.AcceptorClientMock = AcceptorClientMock;

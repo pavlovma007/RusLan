@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+// import Dict = NodeJS.Dict;
 const Network_1 = require("./caspaxos/Network");
 const Acceptor_1 = require("./caspaxos/Acceptor");
 const helper_1 = require("./common/helper");
