@@ -3,4 +3,4 @@
 	url = https://github.com/gryadka/js.git
 [submodule "src/ogorod"]
 	path = src/ogorod
-	url = https://github.com/pavlovma007/ogorod.git
+	url = git@github.com:pavlovma007/ogorod.git
