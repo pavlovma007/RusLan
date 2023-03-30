@@ -1,3 +1,6 @@
 [submodule "src/gryadka-js"]
 	path = src/_gryadka-js
 	url = https://github.com/gryadka/js.git
+[submodule "src/ogorod"]
+	path = src/ogorod
+	url = https://github.com/pavlovma007/ogorod.git
